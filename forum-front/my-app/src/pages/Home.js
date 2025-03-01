@@ -1,30 +1,47 @@
-import { useEffect, useState } from "react";
-import { getPosts } from "../api/api"; // Функция API для получения постов
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { api } from '../api/api';
+import { useAuth } from '../auth/AuthProvider';
+import { Link } from 'react-router-dom';
+
+// Импортируем изображение
+import developerImage from './background.jpg';
 
 const Home = () => {
-  const [posts, setPosts] = useState([]); // Состояние для хранения постов
+  const [posts, setPosts] = useState([]);
+  const { authenticated } = useAuth();
 
   useEffect(() => {
-    getPosts().then((res) => setPosts(res.data)); // Загружаем посты при монтировании
-  }, []);
+    if (authenticated) {
+      api.get('/posts').then((response) => {
+        setPosts(response.data);
+      });
+    }
+  }, [authenticated]);
 
   return (
-    <div>
-      <h1>Posts</h1>
-      <ul>
+    <div className="container mt-4">
+      <h1 className="text-center mb-4">Forum</h1>
+      <p className="text-center mb-5">Powered by the developers of Cum'a Forum</p>
+      
+      {/* Добавление изображения */}
+      <div className="text-center mb-5">
+        <img src={developerImage} alt="Developer" className="img-fluid" />
+      </div>
+
+      <div className="row">
         {posts.map((post) => (
-          <li key={post.id}>
-            <h3>{post.title}</h3>
-            <p>{post.content}</p>
-            <small>
-              By {post.username} on {new Date(post.createdAt).toLocaleString()} {/* Отображаем автора и дату */}
-            </small>
-            <br />
-            <Link to={`/post/${post.id}`}>View Post</Link> {/* Ссылка на детальную страницу поста */}
-          </li>
+          <div className="col-md-4 mb-4" key={post.id}>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">{post.title}</h5>
+                <p className="card-text">{post.content.slice(0, 100)}...</p>
+                <p className="card-text"><small className="text-muted">Author: {post.username}</small></p>
+                <Link to={`/post/${post.id}`} className="btn btn-primary">View Post</Link>
+              </div>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };

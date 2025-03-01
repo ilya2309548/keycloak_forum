@@ -1,51 +1,34 @@
-import { useState, useEffect, createContext } from "react";
-import keycloak from "../api/keycloak";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { initKeycloak, getKeycloak } from '../api/keycloak';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState({
-    isAuthenticated: false,
-    token: localStorage.getItem("keycloak-token"), // Инициализация из localStorage
-  });
+  const [authenticated, setAuthenticated] = useState(false);
+  const [keycloak, setKeycloak] = useState(null);
 
   useEffect(() => {
-    if (!auth.token) {
-      keycloak
-        .init({
-          onLoad: "login-required",
-          pkceMethod: "S256",  // Использование PKCE
-          redirectUri: "http://localhost:3000", // Колбэк URL
-        })
-        .then((authenticated) => {
-          if (authenticated) {
-            const token = keycloak.token;
-            localStorage.setItem("keycloak-token", token); // Сохраняем токен в localStorage
-            setAuth({
-              isAuthenticated: true,
-              token,
-            });
+    initKeycloak(() => {
+      setAuthenticated(true);
+      setKeycloak(getKeycloak());
+    });
+  }, []);
 
-            // Настройка обновления токена
-            setInterval(() => {
-              keycloak
-                .updateToken(30)
-                .then((refreshed) => {
-                  if (refreshed) {
-                    const newToken = keycloak.token;
-                    localStorage.setItem("keycloak-token", newToken); // Обновляем токен в localStorage
-                    setAuth((prev) => ({ ...prev, token: newToken }));
-                  }
-                })
-                .catch(() => keycloak.logout());
-            }, 60000); // Обновляем токен каждые 60 секунд
-          }
-        })
-        .catch(() => {
-          keycloak.logout();
-        });
-    }
-  }, [auth.token]);
+  const login = () => {
+    keycloak.login();
+  };
 
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+  const logout = () => {
+    keycloak.logout();
+  };
+
+  return (
+    <AuthContext.Provider value={{ authenticated, login, logout, keycloak }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  return useContext(AuthContext);
 };

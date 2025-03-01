@@ -1,37 +1,41 @@
-import { useState } from "react";
-import { createPost } from "../api/api"; // ✅ Убедитесь, что импорт правильный
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { api } from '../api/api';
 
 const CreatePost = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const navigate = useNavigate();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
 
-  const handleCreatePost = () => {
-    if (!title.trim() || !content.trim()) return;
-
-    createPost({ title, content })
-      .then(() => {
-        navigate("/"); // После создания поста переходим на главную страницу
-      })
-      .catch((err) => console.error("Error creating post:", err));
+  const handleSubmit = () => {
+    api.post('/posts', { title, content }).then((response) => {
+      alert('Post created!');
+    });
   };
 
   return (
-    <div>
+    <div className="container mt-4">
       <h1>Create Post</h1>
-      <input
-        type="text"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <textarea
-        placeholder="Content"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <button onClick={handleCreatePost}>Submit</button>
+      <div className="mb-3">
+        <label htmlFor="title" className="form-label">Title</label>
+        <input
+          type="text"
+          id="title"
+          className="form-control"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+      <div className="mb-3">
+        <label htmlFor="content" className="form-label">Content</label>
+        <textarea
+          id="content"
+          className="form-control"
+          placeholder="Content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+      </div>
+      <button className="btn btn-primary" onClick={handleSubmit}>Create</button>
     </div>
   );
 };

@@ -1,60 +1,65 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getPostById, getComments, addComment } from "../api/api";
+import React, { useState, useEffect } from 'react';
+import { api } from '../api/api';
+import { useParams } from 'react-router-dom';
 
 const PostDetail = () => {
-  const { postId } = useParams(); // Получаем ID поста из URL
+  const { id } = useParams();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
-    getPostById(postId).then((res) => setPost(res.data)); // Загружаем пост
-    getComments(postId).then((res) => setComments(res.data)); // Загружаем комментарии
-  }, [postId]);
+    api.get(`/posts/${id}`).then((response) => {
+      setPost(response.data);
+    });
+
+    api.get(`/posts/${id}/comments`).then((response) => {
+      setComments(response.data);
+    });
+  }, [id]);
 
   const handleAddComment = () => {
-    if (!newComment.trim()) return; // Проверяем, что комментарий не пустой
-    const comment = { content: newComment };
-
-    addComment(postId, comment).then(() => {
-      setNewComment(""); // Очищаем поле ввода
-      getComments(postId).then((res) => setComments(res.data)); // Обновляем список комментариев
+    api.post(`/posts/${id}/comments`, {
+      content: newComment,
+    }).then((response) => {
+      setComments([...comments, response.data]);
+      setNewComment('');
     });
   };
 
-  if (!post) return <div>Loading...</div>; // Если пост еще загружается
-
   return (
-    <div>
-      <h1>{post.title}</h1>
-      <p>{post.content}</p>
-      <small>
-        By {post.username} on {new Date(post.createdAt).toLocaleString()} {/* Отображаем автора и дату */}
-      </small>
-
-      <h2>Comments</h2>
-      {comments.length === 0 ? (
-        <p>No comments yet.</p>
-      ) : (
-        <ul>
-          {comments.map((comment) => (
-            <li key={comment.id}>
-              <p>{comment.content}</p>
-              <small>
-                By {comment.username} on {new Date(comment.createdAt).toLocaleString()} {/* Автор и дата комментария */}
-              </small>
-            </li>
-          ))}
-        </ul>
+    <div className="container mt-4">
+      {post && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <h1>{post.title}</h1>
+            <p>{post.content}</p>
+            <p><small className="text-muted">Author: {post.username}</small></p>
+            <p><small className="text-muted">Created at: {new Date(post.createdAt).toLocaleString()}</small></p>
+          </div>
+        </div>
       )}
 
-      <textarea
-        value={newComment}
-        onChange={(e) => setNewComment(e.target.value)}
-        placeholder="Add a comment"
-      />
-      <button onClick={handleAddComment}>Submit Comment</button>
+      <h2>Comments</h2>
+      <ul className="list-group mb-4">
+        {comments.map((comment) => (
+          <li className="list-group-item" key={comment.id}>
+            <p>{comment.content}</p>
+            <p><small className="text-muted">Author: {comment.username}</small></p>
+            <p><small className="text-muted">Created at: {new Date(comment.createdAt).toLocaleString()}</small></p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mb-3">
+        <textarea
+          className="form-control"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment"
+        />
+      </div>
+      <button className="btn btn-primary" onClick={handleAddComment}>Add Comment</button>
     </div>
   );
 };
