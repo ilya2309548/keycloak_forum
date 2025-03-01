@@ -20,8 +20,10 @@ const Home = () => {
 
   return (
     <div className="container mt-4">
-      <h1 className="text-center mb-4">Forum</h1>
-      <p className="text-center mb-5">Powered by the developers of Cum'a Forum</p>
+      <h1 className="text-center mb-4">Привет, пользователь👋</h1>
+      <p className="text-center mb-5">Этот экспериментальный сервис создавался с целью получения практики разработки web приложения на spring boot и keycloak. Для получения полноценного рабочего продукта были так же использованы другие технологии. 🖥️🖥️
+      created by ilya_admin
+      </p>
       
       {/* Добавление изображения */}
       <div className="text-center mb-5">
